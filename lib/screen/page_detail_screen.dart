@@ -1,3 +1,4 @@
+import 'package:d3_login/config/app.dart';
 import 'package:d3_login/service/page_service.dart';
 import 'package:flutter/material.dart';
 
@@ -15,20 +16,39 @@ class _PageDetailScreenState extends State<PageDetailScreen> {
   @override
   void initState() {
     super.initState();
-    PageService.fetchPage().then((page) {
+    _fetchPage();
+  }
+
+  Future<void> _fetchPage() async {
+    try {
+      final page = await PageService.fetchPage(widget.id);
       setState(() {
         _page = page;
       });
-    });
+    } catch (e) {
+      print(e);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Page Detail'),
+        title: Text(_page['title']),
       ),
-      body: const Placeholder(),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16.0),
+            Text(
+              _page['content'],
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

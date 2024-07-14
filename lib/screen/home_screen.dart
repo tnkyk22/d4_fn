@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:card_swiper/card_swiper.dart';
+import 'package:d3_login/screen/post_detail_screen.dart';
 import 'package:d3_login/service/auth_service.dart';
-import 'package:d3_login/service/page_detail_screen.dart';
+import 'package:d3_login/screen/page_detail_screen.dart';
 import 'package:d3_login/service/page_service.dart';
+import 'package:d3_login/service/post_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +22,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> banners = [];
   List<dynamic> pages = [];
+  List<dynamic> posts = [];
   Future<void> fetchBanners() async {
     try {
       final response = await http.get(Uri.parse('$API_URL/api/banners'));
@@ -35,9 +38,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> fetchPages() async {
     try {
-      List<dynamic> pages = await PageService.fetchPage();
+      List<dynamic> pages = await PageService.fetchPages();
       setState(() {
         this.pages = pages;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future fetchPosts() async {
+    try {
+      List<dynamic> posts = await PostService.fetchPosts();
+      setState(() {
+        this.posts = posts;
       });
     } catch (e) {
       print(e);
@@ -55,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     fetchBanners();
     fetchPages();
+    fetchPosts();
   }
 
   @override
@@ -93,21 +108,48 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Home'),
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 250,
-            child: Swiper(
-              autoplay: true,
-              itemCount: banners.length,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 250,
+              child: Swiper(
+                autoplay: true,
+                itemCount: banners.length,
+                itemBuilder: (context, index) {
+                  return Image.network(
+                    '$API_URL/${banners[index]['imageUrl']}',
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'ข่าวสาร',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: posts.length,
               itemBuilder: (context, index) {
-                return Image.network(
-                  '$API_URL/${banners[index]['imageUrl']}',
+                return ListTile(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => PostDetailScreen(
+                          id: posts[index]['id'],
+                        ),
+                      ),
+                    );
+                  },
+                  title: Text(posts[index]['title']),
                 );
               },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
